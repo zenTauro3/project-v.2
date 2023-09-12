@@ -59,8 +59,10 @@ async function register(request: Request, response: Response) {
         //send email
         smtp.send(email, key, code);
 
-        //generate pass and save to database
+        //generate hashed password
         const hashed = await bcrypt.hash(password, 10);
+
+        //save to database
         const userInfo = new User({
             type: "standard",
             username, email, password: hashed,
@@ -106,6 +108,47 @@ async function key(request: Request, response: Response) {
         return response.status(500).send("Internal error")
     }
 };
+
+async function access(request: Request, response: Response) {
+    try {
+        const access = request.headers['authorization'];
+        const accessExists = await User.findOne({ 'verification.access': access });
+
+        if (accessExists) {
+            return response.status(200).send(accessExists.email)
+        } else {
+            return response.sendStatus(401)
+        }
+    } catch {
+        return response.status(500).send("Internal error")
+    }
+};
+
+async function resend(request: Request, response: Response) {
+    try {
+        const { access } = request.body;
+
+        //generate new key
+        const buffer = crypto.randomBytes(32);
+        const key = buffer.toString("hex");
+
+        //generate code
+        const algorithm = Math.floor(Math.random() * 1000000);
+        const code = algorithm.toString().padStart(6, '0');
+
+        //update at database
+        const userInfo = await User.findOneAndUpdate({ 'verification.access': access },
+            { $set: { 'verification.key': key, 'verification.code': code } });
+
+        //send email
+        smtp.send(userInfo?.email || "", key, code);
+
+        return response.sendStatus(200);
+
+    } catch {
+        return response.status(500).send("Internal error")
+    }
+}
 
 async function verify(request: Request, response: Response) {
     try {
@@ -192,4 +235,4 @@ async function google(request: Request, response: Response) {
     }
 }
 
-export { auth, register, username, verify, key, login, google };
+export { auth, register, username, verify, key, access, resend, login, google };
