@@ -85,7 +85,7 @@ function Register() {
                     <button disabled={state}
                         className={`disabled:opacity-75 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg w-full transition duration-300 ease-in-out ${state ? 'cursor-not-allowed' : 'transform hover:scale-105'}`}
                     >{loading ? 'Loading...' : 'Register'}</button>
-                    {message && <p className="mt-2 text-green-500">{message}</p>}
+                    {message && <p className="mt-2 text-red-500">{message}</p>}
                 </form>
                 <div className="mb-4 flex items-center">
                     <div className="border-t border-gray-300 flex-grow"></div>
